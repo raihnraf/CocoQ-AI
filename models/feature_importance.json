@@ -1,0 +1,22 @@
+{
+  "features": [
+    "temperature",
+    "moisture",
+    "pH",
+    "color_score",
+    "cooking_time",
+    "supplier_origin_encoded",
+    "dryness_level",
+    "visual_inspection_encoded"
+  ],
+  "importance": [
+    0.2277544012161506,
+    0.3438089612267046,
+    0.13687891716290818,
+    0.04210768700734599,
+    0.10291189643387007,
+    0.0019146698781868907,
+    0.03682013248104746,
+    0.10780333459378631
+  ]
+}

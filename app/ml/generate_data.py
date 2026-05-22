@@ -4,6 +4,8 @@ Generates realistic batch data with domain-knowledge-based grade classification:
 - Grade A (~40%): optimal ranges
 - Grade B (~35%): slightly off optimal
 - Reject (~25%): outside acceptable bounds
+
+Key features (temperature, moisture, pH) are designed to be the most discriminative.
 """
 
 import numpy as np
@@ -34,44 +36,46 @@ def generate_batch_data(n_samples=200, output_path="data/coconut_sugar_batches.c
     visual_b = ['good', 'fair']
     visual_reject = ['fair', 'poor']
 
-    # Grade A: optimal ranges
-    temp_a = np.random.normal(115, 2.5, n_grade_a).clip(110, 120)
-    moisture_a = np.random.normal(2.2, 0.4, n_grade_a).clip(1.5, 3.0)
-    ph_a = np.random.normal(6.0, 0.3, n_grade_a).clip(5.5, 6.5)
-    color_a = np.random.normal(80, 5, n_grade_a).clip(70, 90)
-    cook_a = np.random.normal(90, 5, n_grade_a).clip(80, 100)
-    dry_a = np.random.choice([4, 5], n_grade_a)
-    visual_a_arr = np.random.choice(visual_a, n_grade_a)
+    # Grade A: optimal ranges (tight, well-defined)
+    temp_a = np.random.normal(115, 1.5, n_grade_a).clip(112, 118)
+    moisture_a = np.random.normal(2.2, 0.3, n_grade_a).clip(1.5, 3.0)
+    ph_a = np.random.normal(6.0, 0.25, n_grade_a).clip(5.6, 6.4)
+    color_a = np.random.normal(78, 8, n_grade_a).clip(60, 95)  # More overlap
+    cook_a = np.random.normal(90, 6, n_grade_a).clip(78, 102)
+    dry_a = np.random.choice([3, 4, 5], n_grade_a, p=[0.2, 0.4, 0.4])  # More spread
 
-    # Grade B: slightly off optimal
-    temp_b = np.random.normal(115, 5, n_grade_b).clip(105, 125)
-    moisture_b = np.random.normal(3.8, 0.5, n_grade_b).clip(3.0, 4.5)
+    # Grade B: moderately off (wider ranges, some overlap with A and Reject)
+    temp_b = np.random.normal(108, 3, n_grade_b).clip(100, 116)
+    moisture_b = np.random.normal(3.5, 0.6, n_grade_b).clip(2.5, 4.8)
     ph_b = np.concatenate([
-        np.random.normal(5.0, 0.3, n_grade_b // 2).clip(4.5, 5.5),
-        np.random.normal(6.8, 0.2, n_grade_b - n_grade_b // 2).clip(6.5, 7.0)
+        np.random.normal(5.0, 0.4, n_grade_b // 2).clip(4.4, 5.6),
+        np.random.normal(6.8, 0.3, n_grade_b - n_grade_b // 2).clip(6.4, 7.2)
     ])
-    color_b = np.random.normal(62, 7, n_grade_b).clip(50, 75)
-    cook_b = np.random.normal(90, 10, n_grade_b).clip(70, 110)
-    dry_b = np.random.choice([2, 3, 4], n_grade_b)
-    visual_b_arr = np.random.choice(visual_b, n_grade_b)
+    color_b = np.random.normal(70, 12, n_grade_b).clip(45, 90)  # High overlap
+    cook_b = np.random.normal(88, 10, n_grade_b).clip(68, 112)
+    dry_b = np.random.choice([2, 3, 4], n_grade_b, p=[0.3, 0.4, 0.3])
 
-    # Reject: outside acceptable bounds
+    # Reject: clearly outside bounds
     temp_r = np.concatenate([
-        np.random.normal(100, 3, n_reject // 2).clip(90, 104),
-        np.random.normal(130, 3, n_reject - n_reject // 2).clip(126, 140)
+        np.random.normal(100, 3, n_reject // 2).clip(92, 106),
+        np.random.normal(130, 3, n_reject - n_reject // 2).clip(124, 138)
     ])
-    moisture_r = np.random.normal(5.5, 0.8, n_reject).clip(4.5, 8.0)
+    moisture_r = np.random.normal(5.2, 0.7, n_reject).clip(4.2, 7.0)
     ph_r = np.concatenate([
-        np.random.normal(3.8, 0.5, n_reject // 2).clip(2.5, 4.4),
-        np.random.normal(7.8, 0.5, n_reject - n_reject // 2).clip(7.1, 9.0)
+        np.random.normal(3.8, 0.4, n_reject // 2).clip(3.0, 4.4),
+        np.random.normal(7.6, 0.4, n_reject - n_reject // 2).clip(7.0, 8.5)
     ])
-    color_r = np.random.normal(35, 12, n_reject).clip(10, 49)
+    color_r = np.random.normal(55, 15, n_reject).clip(20, 80)  # High overlap with B
     cook_r = np.concatenate([
-        np.random.normal(55, 8, n_reject // 2).clip(30, 69),
-        np.random.normal(125, 8, n_reject - n_reject // 2).clip(111, 150)
+        np.random.normal(58, 8, n_reject // 2).clip(40, 72),
+        np.random.normal(122, 8, n_reject - n_reject // 2).clip(108, 140)
     ])
-    dry_r = np.random.choice([1, 2], n_reject)
-    visual_r_arr = np.random.choice(visual_reject, n_reject)
+    dry_r = np.random.choice([1, 2, 3], n_reject, p=[0.4, 0.4, 0.2])
+
+    # Visual inspection (weakly correlated — not a strong predictor)
+    visual_a_arr = np.random.choice(visual_a, n_grade_a, p=[0.35, 0.65])
+    visual_b_arr = np.random.choice(visual_b, n_grade_b, p=[0.55, 0.45])
+    visual_r_arr = np.random.choice(visual_reject, n_reject, p=[0.55, 0.45])
 
     # Combine all grades
     data = {
