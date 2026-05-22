@@ -100,6 +100,14 @@ Plans:
 - Bootstrap-like utility classes (custom, no heavy framework)
 - Recommendation engine: rule-based logic in `app/ml/predict.py` that checks parameter ranges and returns actionable messages
 
+**Plans:** 4 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Foundation: base template, responsive CSS, route wiring (UI-09)
+- [ ] 03-02-PLAN.md — Dashboard homepage: stat cards, chart containers, IoT button, stats API (UI-01, WF-01)
+- [ ] 03-03-PLAN.md — Prediction form: batch input, validation, result display, recommendation (UI-02, UI-03, UI-08, WF-02, WF-03)
+- [ ] 03-04-PLAN.md — Analytics: Chart.js charts, history table with pagination and filter (UI-04, UI-05, UI-06, UI-07, ML-03)
+
 **Threat Model:**
 - Chart rendering failures → blank dashboard sections
 - Form submission errors → poor demo experience
