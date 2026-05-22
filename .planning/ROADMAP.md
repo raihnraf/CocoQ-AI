@@ -33,8 +33,8 @@
 **Plans:** 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Project structure, dependencies, and synthetic data generator with domain-knowledge rules
-- [ ] 01-02-PLAN.md — Train Random Forest model with scikit-learn Pipeline, evaluate, and save
+- [x] 01-01-PLAN.md — Project structure, dependencies, and synthetic data generator with domain-knowledge rules
+- [x] 01-02-PLAN.md — Train Random Forest model with scikit-learn Pipeline, evaluate, and save
 
 **Threat Model:**
 - Unrealistic data distributions → model learns noise instead of patterns
@@ -66,10 +66,12 @@ Plans:
 - Model loaded once at app startup via `app/ml/predict.py` → `load_model()`
 - Input validation on all API endpoints with JSON error responses
 
-**Threat Model:**
-- API input validation gaps → crashes on malformed requests
-- Model loading failures → server errors if model file missing
-- Mitigation: Validate all inputs, graceful error handling with JSON responses, check model file exists on startup
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Database schema (API-04) + model loading, prediction, feature importance, recommendations (ML-03)
+- [ ] 02-02-PLAN.md — REST API endpoints: PredictAPI (API-01), BatchAPI (API-02, API-03), FeatureImportanceAPI (ML-03)
+- [ ] 02-03-PLAN.md — Application factory create_app() + main blueprint page routes (/, /predict, /history)
 
 ---
 
