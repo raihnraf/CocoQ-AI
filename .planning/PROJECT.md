@@ -42,10 +42,11 @@ The project should produce CV-ready bullet points covering: predictive quality a
 
 ## Constraints
 
-- **Tech stack**: Python, Flask, Scikit-Learn, Pandas, NumPy, SQLite, Chart.js, Joblib — as specified
+- **Tech stack**: Python 3.12+, Flask 3.1.x, Scikit-Learn 1.7.x, Pandas 2.2.x, NumPy 2.2.x, SQLite 3.45+, Chart.js 4.4.x, Joblib 1.4.x — latest stable versions
 - **Timeline**: Build quickly for demo purposes — keep it simple but polished
 - **Data**: Dummy/simulated dataset — no real production data required
 - **Complexity**: Professional-looking but not overly complex ("tidak perlu terlalu ribet")
+- **Architecture**: Flask application factory pattern with Blueprints, MethodView for REST API, scikit-learn Pipeline for ML
 
 ## Key Decisions
 
