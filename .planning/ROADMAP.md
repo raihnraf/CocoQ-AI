@@ -28,6 +28,12 @@
 - Target: grade (Grade A, Grade B, Reject)
 - Split 80/20 train/test, report accuracy, classification report
 
+**Plans:** 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Project structure, dependencies, and synthetic data generator with domain-knowledge rules
+- [ ] 01-02-PLAN.md — Train Random Forest model with scikit-learn Pipeline, evaluate, and save
+
 **Threat Model:**
 - Unrealistic data distributions → model learns noise instead of patterns
 - Overfitting on small dataset → model performs poorly on "new" data
