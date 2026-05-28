@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — CocoQ-AI{% endblock %}
+
+{% block content %}
+<h1 class="mb-3">Production Dashboard</h1>
+
+<div class="grid grid-4 mb-3">
+    <div class="card stat-card">
+        <div class="stat-value" id="total-batches">--</div>
+        <div class="stat-label">Total Batches</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-value" id="grade-a-pct">--%</div>
+        <div class="stat-label">Grade A</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-value" id="grade-b-pct">--%</div>
+        <div class="stat-label">Grade B</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-value" id="reject-rate">--%</div>
+        <div class="stat-label">Reject Rate</div>
+    </div>
+</div>
+
+<div class="grid grid-2 mt-3">
+    <div class="card">
+        <h3 class="mb-2">Grade Distribution</h3>
+        <div class="chart-container">
+            <canvas id="grade-dist-chart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h3 class="mb-2">Reject Rate Trend</h3>
+        <div class="chart-container">
+            <canvas id="reject-trend-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-3 text-center">
+    <h3 class="mb-2">Simulate Production Batch</h3>
+    <p class="text-muted mb-2">Generate random batch data and get an instant prediction</p>
+    <button id="iot-btn" class="btn btn-secondary">Generate &amp; Predict</button>
+    <div id="iot-result" class="mt-2"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    const SUPPLIERS = ['Central Java', 'Central Kalimantan', 'East Java', 'West Java', 'Yogyakarta'];
+    const VISUAL_OPTIONS = ['poor', 'fair', 'good', 'excellent'];
+
+    async function loadStats() {
+        const res = await fetch('/api/stats');
+        const stats = await res.json();
+        document.getElementById('total-batches').textContent = stats.total_batches;
+        document.getElementById('grade-a-pct').textContent = stats.grade_distribution['Grade A'].percentage + '%';
+        document.getElementById('grade-b-pct').textContent = stats.grade_distribution['Grade B'].percentage + '%';
+        document.getElementById('reject-rate').textContent = stats.reject_rate + '%';
+        return stats;
+    }
+
+    async function simulateIoT() {
+        const btn = document.getElementById('iot-btn');
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+
+        const payload = {
+            temperature: +(105 + Math.random() * 20).toFixed(1),
+            moisture: +(1.5 + Math.random() * 2.5).toFixed(1),
+            pH: +(4.5 + Math.random() * 2.5).toFixed(1),
+            color_score: +(30 + Math.random() * 50).toFixed(1),
+            cooking_time: +(60 + Math.random() * 60).toFixed(0),
+            supplier_origin: SUPPLIERS[Math.floor(Math.random() * SUPPLIERS.length)],
+            dryness_level: Math.floor(Math.random() * 5) + 1,
+            visual_inspection: VISUAL_OPTIONS[Math.floor(Math.random() * VISUAL_OPTIONS.length)],
+        };
+
+        try {
+            const res = await fetch('/api/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+
+            const result = document.getElementById('iot-result');
+            if (res.ok) {
+                result.innerHTML = `
+                    <div class="card" style="display:inline-block;text-align:left;">
+                        <strong>${data.grade}</strong>
+                        (${(data.confidence * 100).toFixed(1)}% confidence)<br>
+                        <span class="text-muted">${data.recommendation}</span>
+                    </div>`;
+            } else {
+                result.innerHTML = `<span style="color:var(--danger)">Error: ${data.error}</span>`;
+            }
+
+            await loadStats();
+            const gdCtx = document.getElementById('grade-dist-chart');
+            const chart = Chart.getChart(gdCtx);
+            if (chart) {
+                const res2 = await fetch('/api/stats');
+                const s = await res2.json();
+                chart.data.datasets[0].data = [s.grade_distribution['Grade A'].count, s.grade_distribution['Grade B'].count, s.grade_distribution['Reject'].count];
+                chart.update();
+                document.getElementById('total-batches').textContent = s.total_batches;
+                document.getElementById('grade-a-pct').textContent = s.grade_distribution['Grade A'].percentage + '%';
+                document.getElementById('grade-b-pct').textContent = s.grade_distribution['Grade B'].percentage + '%';
+                document.getElementById('reject-rate').textContent = s.reject_rate + '%';
+            }
+        } catch (e) {
+            document.getElementById('iot-result').innerHTML = `<span style="color:var(--danger)">Network error: ${e.message}</span>`;
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Generate & Predict';
+    }
+
+    document.getElementById('iot-btn').addEventListener('click', simulateIoT);
+</script>
+{% endblock %}

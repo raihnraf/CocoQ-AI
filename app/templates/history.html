@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Prediction History — CocoQ-AI{% endblock %}
+
+{% block content %}
+<h1 class="mb-3">Prediction History</h1>
+
+<div class="card mb-3">
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <select id="grade-filter" style="width: auto;">
+            <option value="">All Grades</option>
+            <option value="Grade A">Grade A</option>
+            <option value="Grade B">Grade B</option>
+            <option value="Reject">Reject</option>
+        </select>
+        <input type="text" id="search-input" placeholder="Search batch ID..." style="max-width: 250px;">
+        <span id="results-count" class="text-muted"></span>
+    </div>
+</div>
+
+<div class="card">
+    <div style="overflow-x: auto;">
+        <table id="history-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">Batch ID</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">Date</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">Temp</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">Moisture</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">pH</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">Color</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">Supplier</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">Dryness</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">Visual</th>
+                </tr>
+            </thead>
+            <tbody id="history-body">
+                <tr><td colspan="9" class="text-center" style="padding: 2rem;">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mt-2" style="display: flex; justify-content: space-between; align-items: center;">
+    <button id="prev-page" class="btn" disabled>Previous</button>
+    <span id="page-info">Page 1 of 1</span>
+    <button id="next-page" class="btn" disabled>Next</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentPage = 1;
+    let perPage = 20;
+    let currentGrade = '';
+    let currentSearch = '';
+
+    let searchTimeout = null;
+
+    async function loadHistory() {
+        const params = new URLSearchParams({ page: currentPage, per_page: perPage });
+        if (currentGrade) params.set('grade', currentGrade);
+        if (currentSearch) params.set('search', currentSearch);
+
+        try {
+            const res = await fetch(`/api/batches?${params}`);
+            const data = await res.json();
+
+            const tbody = document.getElementById('history-body');
+            if (data.batches.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="padding: 2rem;">No batches found.</td></tr>';
+            } else {
+                tbody.innerHTML = data.batches.map(b => `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 0.5rem 0.75rem; font-weight: 500;">${b.batch_id}</td>
+                        <td style="padding: 0.5rem 0.75rem;">${b.production_date || '—'}</td>
+                        <td style="padding: 0.5rem 0.75rem;">${b.temperature}</td>
+                        <td style="padding: 0.5rem 0.75rem;">${b.moisture}</td>
+                        <td style="padding: 0.5rem 0.75rem;">${b.ph}</td>
+                        <td style="padding: 0.5rem 0.75rem;">${b.color_score}</td>
+                        <td style="padding: 0.5rem 0.75rem;">${b.supplier_origin}</td>
+                        <td style="padding: 0.5rem 0.75rem;">${b.dryness_level}</td>
+                        <td style="padding: 0.5rem 0.75rem;">${b.visual_inspection}</td>
+                    </tr>
+                `).join('');
+            }
+
+            document.getElementById('results-count').textContent =
+                `Showing ${data.batches.length} of ${data.total}`;
+
+            document.getElementById('page-info').textContent =
+                `Page ${data.page} of ${data.pages}`;
+
+            document.getElementById('prev-page').disabled = data.page <= 1;
+            document.getElementById('next-page').disabled = data.page >= data.pages;
+        } catch (e) {
+            document.getElementById('history-body').innerHTML =
+                '<tr><td colspan="9" class="text-center" style="padding: 2rem; color: var(--danger);">Failed to load data.</td></tr>';
+        }
+    }
+
+    document.getElementById('grade-filter').addEventListener('change', (e) => {
+        currentGrade = e.target.value;
+        currentPage = 1;
+        loadHistory();
+    });
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentSearch = e.target.value;
+            currentPage = 1;
+            loadHistory();
+        }, 300);
+    });
+
+    document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            loadHistory();
+        }
+    });
+
+    document.getElementById('next-page').addEventListener('click', () => {
+        currentPage++;
+        loadHistory();
+    });
+
+    document.addEventListener('DOMContentLoaded', loadHistory);
+</script>
+{% endblock %}
